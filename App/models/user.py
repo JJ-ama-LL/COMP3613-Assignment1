@@ -27,39 +27,52 @@ class User(db.Model):
 
 class Driver(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
+    username = db.Column(db.String(50), nullable=False, unique=True)
+    password = db.Column(db.String(256), nullable=False)
     contact = db.Column(db.String(15), nullable=False)
     current_loc = db.Column(db.String(100), nullable=True)
     status = db.Column(db.String(20), nullable=False)
-    vehicle_number = db.Column(db.String(20), nullable=False, unique=True)
+    plate_number = db.Column(db.String(20), nullable=False, unique=True)
 
-    def __init__(self, name, vehicle_number):
-        self.name = name
-        self.vehicle_number = vehicle_number
-        self.status = 'available'
+    def __init__(self, username, password, contact, status, plate_number):
+        self.username = username
+        self.password = generate_password_hash(password)
+        self.contact = contact
+        self.status = status
+        self.plate_number = plate_number
+        self.current_loc = None
 
     def get_json(self):
         return {
             'id': self.id,
-            'name': self.name,
-            'vehicle_number': self.vehicle_number
+            'username': self.username,
+            'contact': self.contact,
+            'current_loc': self.current_loc,
+            'status': self.status,
+            'plate_number': self.plate_number
         }
     
 
 class Drives(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('driver.id'), nullable=False)
-    time = db.Column(db.String(20), nullable=True)
-    date = db.Column(db.String(20), nullable=True)
+    street_id = db.Column(db.Integer, db.ForeignKey('street.id'), nullable=False)
+    time = db.Column(db.String(20), nullable=False)
+    date = db.Column(db.String(20), nullable=False)
 
-    def __init__(self, driver_id, resident_id):
+    def __init__(self, driver_id, time, date, street_id):
         self.driver_id = driver_id
-        self.resident_id = resident_id
+        self.time = time
+        self.date = date
+        self.street_id = street_id
 
     def get_json(self):
         return {
             'id': self.id,
             'driver_id': self.driver_id,
+            'time': self.time,
+            'date': self.date,
+            'street_id': self.street_id
         }
 
 
@@ -67,35 +80,69 @@ class Stops(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     drive_id = db.Column(db.Integer, db.ForeignKey('drives.id'), nullable=False)
     resident_id = db.Column(db.Integer, db.ForeignKey('resident.id'), nullable=False)
+    street_id = db.Column(db.Integer, db.ForeignKey('street.id'), nullable=False)
     address = db.Column(db.String(100), nullable=False)
     time = db.Column(db.String(20), nullable=True)
     date = db.Column(db.String(20), nullable=True)
 
-    def __init__(self, drive_id, address):
+    def __init__(self, drive_id, resident_id, street_id, address, time, date):
         self.drive_id = drive_id
+        self.resident_id = resident_id
+        self.street_id = street_id
+        self.time = time
+        self.date = date
         self.address = address
 
     def get_json(self):
         return {
             'id': self.id,
             'drive_id': self.drive_id,
+            'resident_id': self.resident_id,
+            'street_id': self.street_id,
+            'time': self.time,
+            'date': self.date,
             'address': self.address
+        }
+
+
+class Street(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    street_name = db.Column(db.String(10), nullable=False, unique=True)
+    city = db.Column(db.String(50), nullable=False)
+
+    def __init__(self, street_name, city):
+        self.street_name = street_name
+        self.city = city
+
+    def get_json(self):
+        return {
+            'id': self.id,
+            'street_name': self.street_name,
+            'city': self.city
         }
 
 
 class Resident(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
+    username = db.Column(db.String(50), nullable=False)
+    password = db.Column(db.String(256), nullable=False)
+    contact = db.Column(db.String(15), nullable=False)
     address = db.Column(db.String(100), nullable=False)
-    street = db.Column(db.String(10), nullable=False)
+    street_id = db.Column(db.Integer, db.ForeignKey('street.id'), nullable=False)
 
-    def __init__(self, name, address, street):
-        self.name = name
+    def __init__(self, username, password, address, contact, street_id):
+        self.username = username
+        self.password = generate_password_hash(password)
         self.address = address
-        self.street = street
+        self.contact = contact
+        self.street_id = street_id
 
     def get_json(self):
         return {
             'id': self.id,
-            'name': self.name,
+            'username': self.username,
+            'address': self.address,
+            'contact': self.contact,
+            'street_id': self.street_id
         }
+    
