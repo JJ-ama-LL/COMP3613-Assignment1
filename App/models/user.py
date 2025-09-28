@@ -53,6 +53,12 @@ class Driver(db.Model):
             'plate_number': self.plate_number
         }
     
+    def get_contact(self):
+        return {
+            'username': self.username,
+            'contact': self.contact
+        }
+
     def check_password(self, password):
         """Check hashed password."""
         return check_password_hash(self.password, password)
@@ -61,6 +67,7 @@ class Driver(db.Model):
         self.status = status
         self.current_loc = current_loc
         db.session.commit()
+
 
 class Drives(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -72,7 +79,7 @@ class Drives(db.Model):
     def __init__(self, driver_id, time_str, date_str, street_id):
         self.driver_id = driver_id
         self.time = datetime.strptime(time_str, '%H:%M').time()
-        self.date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        self.date = datetime.strptime(date_str, '%d-%m-%Y').date()
         self.street_id = street_id
 
     def get_json(self):
@@ -154,4 +161,8 @@ class Resident(db.Model):
             'contact': self.contact,
             'street_id': self.street_id
         }
+    
+    def check_password(self, password):
+        """Check hashed password."""
+        return check_password_hash(self.password, password)
     

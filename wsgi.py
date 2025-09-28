@@ -87,6 +87,52 @@ def list_residents_command():
     for resident in residents:
         print(resident.get_json())
 
+@resident_cli.command("inbox", help="Lists all drives scheduled for a resident's street in the database")
+def inbox_resident_command():
+    print("Please Enter your Resident username: ")
+    username = input()
+    print("Please Enter your Resident password: ")
+    password = input()
+    resident = Resident.query.filter_by(username=username).first()
+    if resident and resident.check_password(password):
+        drives = Drives.query.filter_by(street_id=resident.street_id).all()
+        if drives:
+            for drive in drives:
+                print(drive.get_json())
+        else:
+            print(f"No drives scheduled for Resident {username}'s street.")
+            print("Please contact any of the following drivers to request a drive to your street:")
+            drivers=Driver.query.all()
+            for driver in drivers:
+                print(driver.get_contact())
+    else:
+        print("Invalid username or password.")
+
+@resident_cli.command("status", help="Allows a resident to check a driver's status and location for a driver to their street in the database")
+@click.argument("drive_id", type=int)
+def driver_status_resident_command(drive_id):
+    print("Please Enter your Resident username: ")
+    username = input()
+    print("Please Enter your Resident password: ")
+    password = input()
+    resident = Resident.query.filter_by(username=username).first()
+    if resident and resident.check_password(password):
+        drive = Drives.query.filter_by(id=drive_id).first()
+        if drive:
+            driver = Driver.query.filter_by(id=drive.driver_id).first()
+            if driver:
+                print(f"Driver {driver.username}'s status is {driver.status} and current location is {driver.current_loc}.")
+            else:
+                print("Driver not found.")
+        else:
+            print("Unable to retrieve driver status and location without a scheduled drive.")
+            print("Please contact any of the following drivers to request a drive to your street:")
+            drivers=Driver.query.all()
+            for driver in drivers:
+                print(driver.get_contact())
+    else:
+        print("Invalid username or password.")
+
 app.cli.add_command(resident_cli)
 
 
