@@ -2,7 +2,7 @@ import click, pytest, sys
 from flask.cli import with_appcontext, AppGroup
 
 from App.database import db, get_migrate
-from App.models import User, Driver, Drives, Street, Resident
+from App.models import User, Driver, Drives, Street, Resident, Stops
 from App.main import create_app
 from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize )
 
@@ -133,6 +133,29 @@ def driver_status_resident_command(drive_id):
     else:
         print("Invalid username or password.")
 
+@resident_cli.command("request", help="Allows a resident to request a stop for a drive on their street in the database")
+@click.argument("drive_id", type=int)
+def request_stop_resident_command(drive_id):
+    print("Please Enter your Resident username: ")
+    username = input()
+    print("Please Enter your Resident password: ")
+    password = input()
+    resident = Resident.query.filter_by(username=username).first()
+    if resident and resident.check_password(password):
+        drive = Drives.query.filter_by(id=drive_id).first()
+        if drive:
+            db.session.add(Stops(drive_id=drive.id, resident_id=resident.id, street_id=resident.street_id, address=resident.address, date=drive.date.strftime("%d-%m-%Y")))
+            db.session.commit()
+            print(f"Stop requested for Resident {username} for Drive ID {drive_id}.")
+        else:
+            print(f"No drives scheduled for Resident {username}'s street.")
+            print("Please contact any of the following drivers to request a drive to your street:")
+            drivers=Driver.query.all()
+            for driver in drivers:
+                print(driver.get_contact())
+    else:
+        print("Invalid username or password.")
+
 app.cli.add_command(resident_cli)
 
 
@@ -185,7 +208,9 @@ def schedule_drive_command(street_name, time, date):
 app.cli.add_command(driver_cli)
 
 
+
 drive_cli = AppGroup('drive', help='Driver object commands')
+
 @drive_cli.command("list", help="Lists drives in the database")
 def list_drives_command(): 
     drives = Drives.query.all()
@@ -193,3 +218,26 @@ def list_drives_command():
         print(drive.get_json())
 
 app.cli.add_command(drive_cli)
+
+
+
+street_cli = AppGroup('street', help='Street object commands')
+
+@street_cli.command("list", help="Lists streets in the database")
+def list_streets_command():
+    streets = Street.query.all()
+    for street in streets:
+        print(street.get_json())
+
+app.cli.add_command(street_cli)
+
+
+
+stops_cli = AppGroup('stop', help='Stop object commands')
+@stops_cli.command("list", help="Lists stops in the database")
+def list_stops_command():
+    stops = Stops.query.all()
+    for stop in stops:
+        print(stop.get_json())
+
+app.cli.add_command(stops_cli)

@@ -87,7 +87,7 @@ class Drives(db.Model):
             'id': self.id,
             'driver_id': self.driver_id,
             'time': self.time.strftime("%H:%M"),
-            'date': self.date.strftime("%Y-%m-%d"),
+            'date': self.date.strftime("%d-%m-%Y"),
             'street_id': self.street_id
         }
 
@@ -98,15 +98,13 @@ class Stops(db.Model):
     resident_id = db.Column(db.Integer, db.ForeignKey('resident.id'), nullable=False)
     street_id = db.Column(db.Integer, db.ForeignKey('street.id'), nullable=False)
     address = db.Column(db.String(100), nullable=False)
-    time = db.Column(db.String(20), nullable=True)
-    date = db.Column(db.String(20), nullable=True)
+    date = db.Column(db.Date, nullable=False)
 
-    def __init__(self, drive_id, resident_id, street_id, address, time, date):
+    def __init__(self, drive_id, resident_id, street_id, address, date):
         self.drive_id = drive_id
         self.resident_id = resident_id
         self.street_id = street_id
-        self.time = time
-        self.date = date
+        self.date = datetime.strptime(date, '%d-%m-%Y').date()
         self.address = address
 
     def get_json(self):
@@ -115,8 +113,7 @@ class Stops(db.Model):
             'drive_id': self.drive_id,
             'resident_id': self.resident_id,
             'street_id': self.street_id,
-            'time': self.time,
-            'date': self.date,
+            'date': self.date.strftime("%d-%m-%Y"),
             'address': self.address
         }
 
