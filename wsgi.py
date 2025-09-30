@@ -170,12 +170,13 @@ def list_drivers_command():
 
 @driver_cli.command("update", help="Updates a driver's status and location in the database")
 @click.argument("status", type=str)
-@click.argument("current_loc", type=str)
+@click.argument("current_loc", nargs=-1, type=str)
 def update_driver_command(status, current_loc):
     print("Please Enter your Driver username: ")
     username = input()
     print("Please Enter your Driver password: ")
     password = input()
+    current_loc = ' '.join(current_loc)
     driver = Driver.query.filter_by(username=username).first()
     if driver and driver.check_password(password):
         driver.update_driver(status, current_loc)
